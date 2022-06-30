@@ -1,46 +1,66 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Refresh } from "./Refresh";
-
+import { Route, Routes, BrowserRouter, useLocation } from "react-router-dom";
+import Header from "./Components/Header";
+import Home from "./Components/Home";
+import Base from "./Components/Base";
+import Toppings from "./Components/Toppings";
+import Order from "./Components/Order";
+import Modal from "./Components/Modal";
 import "./App.css";
+import { AnimatePresence, motion } from "framer-motion";
 
-const animation = {
-	rest: { scale: 1, rotate: 0, borderRadius: "20%" },
-	// hover: {
-	// 	scale: 1,
-	// 	transition: {
-	// 		duration: 0.5,
-	// 		ease: "easeInOut",
-	// 	},
-	// },
-	pressed: {
-		scale: [2, 2, 1, 1],
-		rotate: [0, 270, 270, 0],
-		borderRadius: ["20%", "50%", "50%", "20%"],
-		transition: {
-			duration: 2,
-			ease: "easeInOut",
-		},
-	},
-};
+function App() {
+	const location = useLocation();
+	const [showModal, setShowModal] = useState(false);
+	const [pizza, setPizza] = useState({ base: "", toppings: [] });
 
-const App = () => {
-	const [count, setCount] = useState(0);
-	console.log(count);
+	const addBase = (base) => {
+		setPizza({ ...pizza, base });
+	};
+
+	const addTopping = (topping) => {
+		let newToppings;
+		if (!pizza.toppings.includes(topping)) {
+			newToppings = [...pizza.toppings, topping];
+		} else {
+			newToppings = pizza.toppings.filter((item) => item !== topping);
+		}
+		setPizza({ ...pizza, toppings: newToppings });
+	};
+
 	return (
 		<>
-			<Refresh onClick={() => setCount((prevCnt) => prevCnt + 1)} />
-			<div className="example-container">
-				<motion.div
-					animate={{ scale: 2 }}
-					initial="rest"
-					whileHover="hover"
-					onTap="pressed"
-					variants={animation}
-				/>
-			</div>
+			<Header />
+			<AnimatePresence
+				exitBeforeEnter
+				onExitComplete={() => {
+					setShowModal(false);
+				}}>
+				<Routes location={location} key={location.key}>
+					<Route
+						path="/base"
+						element={<Base addBase={addBase} pizza={pizza} />}
+					/>
+					<Route
+						path="/toppings"
+						element={<Toppings addTopping={addTopping} pizza={pizza} />}
+					/>
+					<Route
+						path="/order"
+						element={
+							<Order
+								pizza={pizza}
+								setShowModal={setShowModal}
+								showModal={showModal}
+							/>
+						}
+					/>
+					<Route path="/" element={<Home />} />
+				</Routes>
+			</AnimatePresence>
+			<Modal showModal={showModal} setShowModal={setShowModal} />
 		</>
 	);
-};
+}
 
 export default App;
